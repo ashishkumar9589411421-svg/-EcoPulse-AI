@@ -11,7 +11,7 @@ class App {
         this.setupNavigation();
         this.setupForms();
         this.setupProfile();
-        this.setupChat();
+        // this.setupChat(); // Chat disabled for now
         this.checkAuthStatus();
     }
 
@@ -157,6 +157,29 @@ class App {
                 btn.disabled = false;
             }
         });
+
+        // Save manual city input
+        document.getElementById('btn-save-city').addEventListener('click', async () => {
+            const cityInput = document.getElementById('manual-city-input').value.trim();
+            if (!cityInput) return;
+            
+            const btn = document.getElementById('btn-save-city');
+            const ogText = btn.innerHTML;
+            btn.innerHTML = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                const res = await window.api.updateProfile({ city: cityInput });
+                this.currentUser = res.data.user;
+                this.showToast('City saved successfully!', 'success');
+                this.loadWeather(); // Reload weather with new city
+            } catch (err) {
+                this.showToast('Failed to save city', 'error');
+            } finally {
+                btn.innerHTML = ogText;
+                btn.disabled = false;
+            }
+        });
     }
 
     setupProfile() {
@@ -290,22 +313,23 @@ class App {
         const profileBtn = document.getElementById('nav-profile-btn');
         const logoutBtn = document.getElementById('nav-logout-btn');
         const chatBtn = document.getElementById('open-chat-btn');
+        const chatWidget = document.getElementById('chat-widget');
 
         if (this.currentUser) {
-            loginBtn.classList.add('hidden');
-            regBtn.classList.add('hidden');
-            dashBtn.classList.remove('hidden');
-            profileBtn.classList.remove('hidden');
-            logoutBtn.classList.remove('hidden');
-            chatBtn.classList.remove('hidden');
+            if (loginBtn) loginBtn.classList.add('hidden');
+            if (regBtn) regBtn.classList.add('hidden');
+            if (dashBtn) dashBtn.classList.remove('hidden');
+            if (profileBtn) profileBtn.classList.remove('hidden');
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            if (chatBtn) chatBtn.classList.remove('hidden');
         } else {
-            loginBtn.classList.remove('hidden');
-            regBtn.classList.remove('hidden');
-            dashBtn.classList.add('hidden');
-            profileBtn.classList.add('hidden');
-            logoutBtn.classList.add('hidden');
-            chatBtn.classList.add('hidden');
-            document.getElementById('chat-widget').classList.add('hidden');
+            if (loginBtn) loginBtn.classList.remove('hidden');
+            if (regBtn) regBtn.classList.remove('hidden');
+            if (dashBtn) dashBtn.classList.add('hidden');
+            if (profileBtn) profileBtn.classList.add('hidden');
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            if (chatBtn) chatBtn.classList.add('hidden');
+            if (chatWidget) chatWidget.classList.add('hidden');
         }
     }
 
@@ -349,9 +373,7 @@ class App {
                 document.getElementById('ai-donts').innerHTML = '';
             }
 
-            if (this.currentUser.location_lat && this.currentUser.location_lon) {
-                this.loadWeather();
-            }
+            this.loadWeather();
 
         } catch (err) {
             console.error(err);
@@ -360,18 +382,32 @@ class App {
     }
 
     async loadWeather() {
+        const widget = document.getElementById('weather-widget');
+        const iconContainer = document.getElementById('weather-icon');
+        const infoContainer = document.getElementById('weather-info');
+        const inputContainer = document.getElementById('weather-input-container');
+
         try {
             const res = await window.api.getWeather();
             const weather = res.data;
-            document.getElementById('weather-widget').style.display = 'flex';
+            
+            widget.style.display = 'flex';
+            iconContainer.style.display = 'block';
+            infoContainer.style.display = 'block';
+            inputContainer.style.display = 'none';
+
             document.getElementById('weather-temp').textContent = `${Math.round(weather.main.temp)}°C`;
             document.getElementById('weather-desc').textContent = weather.weather[0].description;
             document.getElementById('weather-loc').textContent = weather.name;
             
             const iconCode = weather.weather[0].icon;
-            document.getElementById('weather-icon').innerHTML = `<img src="http://openweathermap.org/img/wn/${iconCode}@2x.png" style="width: 50px; height: 50px;" />`;
+            iconContainer.innerHTML = `<img src="http://openweathermap.org/img/wn/${iconCode}@2x.png" style="width: 50px; height: 50px;" />`;
         } catch (err) {
-            console.error("Weather failed to load", err);
+            // Display manual input if location is not set or weather fails
+            widget.style.display = 'flex';
+            iconContainer.style.display = 'none';
+            infoContainer.style.display = 'none';
+            inputContainer.style.display = 'flex';
         }
     }
 
