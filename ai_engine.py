@@ -18,7 +18,7 @@ def get_recommendations(record):
         
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-pro')
         
         prompt = f"""
         You are a sustainability expert AI for 'EcoPulse AI'. 
@@ -66,7 +66,7 @@ def chat_with_ai(message, user_context=None):
         
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-pro')
         
         context_str = ""
         if user_context:
@@ -84,4 +84,4 @@ def chat_with_ai(message, user_context=None):
         return response.text.strip()
     except Exception as e:
         print(f"Error in Chat AI: {e}")
-        return "I'm sorry, I'm having trouble connecting to my brain right now. Please try again later!"
+        return f"I'm having trouble connecting right now. Error details: {str(e)}"
